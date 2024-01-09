@@ -42,7 +42,10 @@ def load_userData():
         userData = {
             "subscribers": [999999, 9999121], #CHANGE to chat_id of default users
             "white_list": [],
-            "userData": {}
+            "userData": {},
+            "data": {
+                "0x0123456789abcdef0123456789abcdef01234567": ["", 0.0]
+            }
         }
         print("Creating userData.json...")
         # Load data from data.json
@@ -56,8 +59,7 @@ def load_userData():
 def user_default(subscriber):
     default_user = {
             "id": subscriber, 
-            "link": "https://etherscan.io/tokentxns?<link>", #CHANGE
-            "last_hash": ""
+            "links": ["0x0123456789abcdef0123456789abcdef01234567"],
         }
     return default_user.copy()
 
@@ -66,3 +68,23 @@ def set_user_default(userData: dict):
         if str(subscriber) not in list(userData["userData"].keys()):
             userData["userData"][str(subscriber)] = user_default(subscriber)
     save_userData(userData)
+
+def check_data_validity(userData: dict):
+    comb_list = list(set([
+                addrs
+                for user_id, user_info in userData["userData"].items()
+                for addrs in user_info["links"] 
+                ]))
+    for addr in comb_list:
+        if addr not in userData["data"]:
+            userData["data"][addr] = ["", 0.0]
+    dellist = [link for link in userData["data"] if link not in comb_list]
+    for link in dellist:
+        del userData["data"][link]
+    save_userData(userData)
+
+def link_to_tx(link:str):
+    if "a=" in link:
+        return link.split("a=")[1].split("&")[0]
+    else:
+        return link.split("/")[-1].split("?")[0]
